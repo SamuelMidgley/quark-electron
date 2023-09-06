@@ -5,8 +5,8 @@ import { Card } from '@renderer/ui/card'
 
 interface ToDoProps {
   toDo: IToDo
-  changeToDoState: (id: string, newState: boolean) => void
-  removeToDo: (id: string) => void
+  changeToDoState: (toDo: IToDo) => void
+  removeToDo: (id: string, isComplete: boolean) => void
 }
 
 export function ToDo({ toDo, changeToDoState, removeToDo }: ToDoProps): React.ReactElement {
@@ -15,14 +15,23 @@ export function ToDo({ toDo, changeToDoState, removeToDo }: ToDoProps): React.Re
   return (
     <Card className="mb-2">
       <div className="p-4 flex items-center gap-2">
-        <Button variant="ghost" size="icon" onClick={(): void => changeToDoState(id, !checked)}>
+        <Button variant="ghost" size="icon" onClick={(): void => changeToDoState(toDo)}>
           {checked ? <CheckCircledIcon className="h-5 w-5" /> : <CircleIcon className="h-5 w-5" />}
         </Button>
         {label}
+
+        {/* <Button
+          variant="ghost"
+          size="icon"
+          onClick={(): void => removeToDo(id, checked)}
+          className="ml-auto"
+        >
+          <Pencil1Icon className="h-5 w-5" />
+        </Button> */}
         <Button
           variant="ghost"
           size="icon"
-          onClick={(): void => removeToDo(id)}
+          onClick={(): void => removeToDo(id, checked)}
           className="ml-auto hover:bg-destructive hover:text-destructive-foreground focus:bg-destructive focus:text-destructive-foreground"
         >
           <TrashIcon className="h-5 w-5" />

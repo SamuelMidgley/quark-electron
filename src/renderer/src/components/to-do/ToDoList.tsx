@@ -10,6 +10,7 @@ import {
   AccordionTrigger,
   AccordionContent
 } from '@renderer/ui/accordion'
+import { Progress } from '@renderer/ui/progress'
 
 interface ToDoListProps {
   initial_todos: IToDo[]
@@ -17,36 +18,51 @@ interface ToDoListProps {
 
 export function ToDoList({ initial_todos }: ToDoListProps): JSX.Element {
   const [input, setInput] = useState('')
-  const [todos, setToDos] = useState(initial_todos)
+  const [incomplete, setIncomplete] = useState(initial_todos.filter((td) => !td.checked))
+  const [complete, setComplete] = useState(initial_todos.filter((td) => td.checked))
 
-  function changeToDoState(id: string, newState: boolean): void {
-    setToDos((prev) =>
-      prev.map((td) => {
-        if (td.id === id) {
-          return {
-            id: td.id,
-            label: td.label,
-            checked: newState
-          }
-        }
+  function changeToDoState(toDo: IToDo): void {
+    const addToDo = toDo.checked ? setIncomplete : setComplete
+    const removeToDo = toDo.checked ? setComplete : setIncomplete
 
-        return td
-      })
-    )
+    addToDo((prev) => [
+      ...prev,
+      {
+        ...toDo,
+        checked: !toDo.checked
+      }
+    ])
+
+    removeToDo((prev) => prev.filter((td) => td.id !== toDo.id))
   }
 
-  function removeToDo(id: string): void {
-    setToDos((prev) => prev.filter((td) => td.id !== id))
+  function removeToDo(id: string, isComplete: boolean): void {
+    if (isComplete) {
+      setComplete((prev) => prev.filter((td) => td.id !== id))
+      return
+    }
+
+    setIncomplete((prev) => prev.filter((td) => td.id !== id))
   }
 
-  const incomplete = todos.filter((td) => !td.checked)
-  const complete = todos.filter((td) => td.checked)
+  function addToDo(label: string): void {
+    setIncomplete((prev) => [
+      ...prev,
+      {
+        id: nanoid(),
+        label,
+        checked: false
+      }
+    ])
+  }
+
+  const percentComplete = (complete.length / (complete.length + incomplete.length)) * 100
 
   return (
     <div className="flex flex-col w-full">
-      <div className="mx-4 mt-4">
+      <div className="mt-4">
         <h1 className="text-xl font-bold mb-4">To do</h1>
-        <div className="flex gap-2 mb-4">
+        <div className="flex gap-2 mb-8">
           <label htmlFor="add-to-do" className="sr-only">
             Add to do
           </label>
@@ -56,14 +72,7 @@ export function ToDoList({ initial_todos }: ToDoListProps): JSX.Element {
             onChange={(e): void => setInput(e.currentTarget.value)}
             onKeyDown={(e): void => {
               if (e.key === 'Enter' && input.trim().length > 0) {
-                setToDos((prev) => [
-                  ...prev,
-                  {
-                    id: nanoid(),
-                    label: input,
-                    checked: false
-                  }
-                ])
+                addToDo(input)
                 setInput('')
               }
             }}
@@ -72,14 +81,7 @@ export function ToDoList({ initial_todos }: ToDoListProps): JSX.Element {
             type="button"
             onClick={(): void => {
               if (input.trim().length > 0) {
-                setToDos((prev) => [
-                  ...prev,
-                  {
-                    id: nanoid(),
-                    label: input,
-                    checked: false
-                  }
-                ])
+                addToDo(input)
                 setInput('')
               }
             }}
@@ -88,24 +90,27 @@ export function ToDoList({ initial_todos }: ToDoListProps): JSX.Element {
           </Button>
         </div>
         <div>
+          <Progress value={percentComplete} className="mb-8" />
           {incomplete.map((td) => (
             <ToDo key={td.id} toDo={td} changeToDoState={changeToDoState} removeToDo={removeToDo} />
           ))}
-          <Accordion type="single" collapsible>
-            <AccordionItem value="completed">
-              <AccordionTrigger>Completed</AccordionTrigger>
-              <AccordionContent>
-                {complete.map((td) => (
-                  <ToDo
-                    key={td.id}
-                    toDo={td}
-                    changeToDoState={changeToDoState}
-                    removeToDo={removeToDo}
-                  />
-                ))}
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+          {complete.length > 0 && (
+            <Accordion type="single" collapsible defaultValue="completed">
+              <AccordionItem value="completed">
+                <AccordionTrigger>Completed</AccordionTrigger>
+                <AccordionContent>
+                  {complete.map((td) => (
+                    <ToDo
+                      key={td.id}
+                      toDo={td}
+                      changeToDoState={changeToDoState}
+                      removeToDo={removeToDo}
+                    />
+                  ))}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          )}
         </div>
       </div>
     </div>
