@@ -1,1 +1,5 @@
 export { ToDo } from './to-do/ToDo'
+export { Kanban } from './kanban/Kanban'
+export { Ticket } from './ticket/Ticket'
+export { NavBar } from './nav-bar/NavBar'
+export { Settings } from './settings/Settings'
